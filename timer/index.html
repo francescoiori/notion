@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Countdown Timer</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="countdown" class="countdown">
+    <div id="ticker" class="countdown__fill"></div>
+    <div class="countdown__controls">
+      <div id="display" class="countdown__digit">
+        <span id="minutes">05</span><span class="separator">:</span><span id="seconds">00</span>
+      </div>
+      <div id="setter" class="countdown__setter">
+        <button class="btn" data-action="down" aria-label="Decrease time">&#x25BC;</button>
+        <span class="setter__label">min</span>
+        <button class="btn" data-action="up" aria-label="Increase time">&#x25B2;</button>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
