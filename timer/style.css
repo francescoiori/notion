@@ -1,31 +1,29 @@
 :root {
   --bg: #ffffff;
   --text: #37352f;
-  --text-muted: #37352f99;
-  --accent: #2eaadc;
-  --accent-hover: #2496c4;
+  --muted: #37352f66;
+  --accent: #2383e2;
+  --accent-hover: #1b6ec2;
   --danger: #eb5757;
-  --danger-hover: #d44a4a;
-  --neutral: #e2e2e2;
-  --neutral-hover: #d0d0d0;
-  --progress-bg: #f0f0f0;
-  --progress-bar: #2eaadc;
-  --border: #e8e8e8;
+  --danger-hover: #d44040;
+  --subtle: #f1f1ef;
+  --subtle-hover: #e3e3e0;
+  --bar-track: #f1f1ef;
+  --bar-fill: #2383e2;
 }
 
 [data-theme="dark"] {
   --bg: #191919;
-  --text: #ffffffcf;
-  --text-muted: #ffffff60;
-  --accent: #2eaadc;
-  --accent-hover: #3dbde8;
-  --danger: #eb5757;
-  --danger-hover: #f06a6a;
-  --neutral: #333;
-  --neutral-hover: #444;
-  --progress-bg: #252525;
-  --progress-bar: #2eaadc;
-  --border: #ffffff14;
+  --text: #ffffffde;
+  --muted: #ffffff4d;
+  --accent: #529cca;
+  --accent-hover: #6bb1db;
+  --danger: #e06a6a;
+  --danger-hover: #eb8080;
+  --subtle: #2f2f2f;
+  --subtle-hover: #3a3a3a;
+  --bar-track: #2f2f2f;
+  --bar-fill: #529cca;
 }
 
 * {
@@ -34,198 +32,166 @@
   box-sizing: border-box;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   background: var(--bg);
-  font-family: "Inter", system-ui, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  overflow: hidden;
-  transition: background 0.3s ease;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  transition: background 0.25s ease;
 }
 
 .timer {
-  width: 100%;
-  max-width: 460px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.timer__progress {
-  height: 4px;
-  background: var(--progress-bg);
-  position: relative;
-  overflow: hidden;
-}
-
-.timer__progress::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  width: var(--pct, 0%);
-  background: var(--progress-bar);
-  transition: width 0.25s linear;
 }
 
-.timer__content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  gap: 20px;
-}
-
-.timer__time {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  position: relative;
-}
-
-.digit {
-  font-size: 2.6em;
-  font-weight: 500;
-  color: var(--text);
-  line-height: 1;
-  min-width: 1.3em;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.sep {
-  font-size: 2.4em;
-  font-weight: 300;
-  color: var(--text-muted);
-  line-height: 1;
-  margin: 0 2px;
-}
-
-.adj {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.55em;
-  cursor: pointer;
-  padding: 4px;
-  line-height: 1;
-  border-radius: 4px;
-  transition: color 0.15s, background 0.15s;
-  display: flex;
-  align-items: center;
-}
-
-.adj:hover {
-  color: var(--text);
-  background: var(--neutral);
-}
-
-.adj[data-dir="up"] {
-  align-self: flex-start;
-  margin-top: 2px;
-}
-
-.adj[data-dir="down"] {
-  align-self: flex-end;
-  margin-bottom: 2px;
-}
-
-.timer--running .adj {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.timer__buttons {
-  display: flex;
-  gap: 8px;
+.timer__bar {
+  height: 5px;
+  background: var(--bar-track);
   flex-shrink: 0;
 }
 
-.action {
-  font-family: inherit;
-  font-size: 0.82em;
+.timer__bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--bar-fill);
+  transition: width 0.3s linear;
+}
+
+.timer--finished .timer__bar-fill {
+  background: var(--danger);
+}
+
+.timer__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 16px 28px;
+}
+
+.timer__display {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.time {
+  font-family: "Space Mono", monospace;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.timer--finished .time {
+  color: var(--danger);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.timer--finished .time {
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+.nudge {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 22px;
   font-weight: 500;
-  padding: 8px 18px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
+  background: var(--subtle);
+  color: var(--text);
   cursor: pointer;
-  transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
-  letter-spacing: 0.01em;
+  transition: background 0.15s, transform 0.1s;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
-.action:active {
-  transform: scale(0.96);
+.nudge:hover {
+  background: var(--subtle-hover);
 }
 
-.action:disabled {
-  opacity: 0.35;
-  cursor: default;
+.nudge:active {
+  transform: scale(0.92);
 }
 
-.action:disabled:active {
-  transform: none;
+.timer--running .nudge {
+  opacity: 0.2;
+  pointer-events: none;
 }
 
-.action--start {
+.timer__actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn--start {
   background: var(--accent);
   color: #fff;
 }
 
-.action--start:hover:not(:disabled) {
+.btn--start:hover {
   background: var(--accent-hover);
 }
 
-.action--stop {
+.btn--stop {
   background: var(--danger);
   color: #fff;
 }
 
-.action--stop:hover:not(:disabled) {
+.btn--stop:hover {
   background: var(--danger-hover);
 }
 
-.action--reset {
-  background: var(--neutral);
+.btn--reset {
+  background: var(--subtle);
   color: var(--text);
 }
 
-.action--reset:hover:not(:disabled) {
-  background: var(--neutral-hover);
+.btn--reset:hover {
+  background: var(--subtle-hover);
 }
 
-.timer--finished .digit {
-  color: var(--danger);
-}
-
-.timer--finished .sep {
-  color: var(--danger);
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.timer--finished .timer__time {
-  animation: pulse 1s ease-in-out infinite;
-}
-
-@media screen and (max-width: 400px) {
-  .timer__content {
+@media screen and (max-width: 420px) {
+  .timer__body {
     flex-direction: column;
-    padding: 14px 16px;
-    gap: 12px;
+    gap: 14px;
+    padding: 12px 16px;
   }
-  .digit {
-    font-size: 2em;
-  }
-  .sep {
-    font-size: 1.8em;
+  .time {
+    font-size: 40px;
   }
 }

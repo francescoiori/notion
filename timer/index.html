@@ -7,25 +7,23 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
   <div class="timer">
-    <div id="progress" class="timer__progress"></div>
-    <div class="timer__content">
-      <div class="timer__time">
-        <button class="adj" data-target="minutes" data-dir="up" aria-label="Increase minutes">&#x25B2;</button>
-        <button class="adj" data-target="minutes" data-dir="down" aria-label="Decrease minutes">&#x25BC;</button>
-        <span id="minutes" class="digit">05</span>
-        <span class="sep">:</span>
-        <span id="seconds" class="digit">00</span>
-        <button class="adj" data-target="seconds" data-dir="up" aria-label="Increase seconds">&#x25B2;</button>
-        <button class="adj" data-target="seconds" data-dir="down" aria-label="Decrease seconds">&#x25BC;</button>
+    <div class="timer__bar">
+      <div id="progress" class="timer__bar-fill"></div>
+    </div>
+    <div class="timer__body">
+      <div class="timer__display">
+        <button class="nudge" id="minUp" aria-label="Add 1 minute">+</button>
+        <span id="time" class="time">05:00</span>
+        <button class="nudge" id="minDown" aria-label="Remove 1 minute">&minus;</button>
       </div>
-      <div class="timer__buttons">
-        <button id="startBtn" class="action action--start">Start</button>
-        <button id="stopBtn" class="action action--stop" disabled>Stop</button>
-        <button id="resetBtn" class="action action--reset">Reset</button>
+      <div class="timer__actions">
+        <button id="startBtn" class="btn btn--start">Start</button>
+        <button id="stopBtn" class="btn btn--stop" hidden>Stop</button>
+        <button id="resetBtn" class="btn btn--reset">Reset</button>
       </div>
     </div>
   </div>

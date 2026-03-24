@@ -1,82 +1,87 @@
 (function () {
-  const timerEl = document.querySelector(".timer");
-  const progressEl = document.getElementById("progress");
-  const minutesEl = document.getElementById("minutes");
-  const secondsEl = document.getElementById("seconds");
-  const startBtn = document.getElementById("startBtn");
-  const stopBtn = document.getElementById("stopBtn");
-  const resetBtn = document.getElementById("resetBtn");
+  var timerEl = document.querySelector(".timer");
+  var barFill = document.getElementById("progress");
+  var timeEl = document.getElementById("time");
+  var startBtn = document.getElementById("startBtn");
+  var stopBtn = document.getElementById("stopBtn");
+  var resetBtn = document.getElementById("resetBtn");
+  var minUpBtn = document.getElementById("minUp");
+  var minDownBtn = document.getElementById("minDown");
 
-  const MIN_TOTAL = 5;
-  const MAX_TOTAL = 99 * 60 + 59;
-
-  let setMinutes = 5;
-  let setSeconds = 0;
-  let running = false;
-  let finished = false;
-  let frameReq = null;
+  var setMinutes = 5;
+  var running = false;
+  var finished = false;
+  var frameReq = null;
+  var remainingOnStop = null;
 
   function pad(n) {
-    return String(n).padStart(2, "0");
+    return n < 10 ? "0" + n : "" + n;
   }
 
-  function totalSetMs() {
-    return (setMinutes * 60 + setSeconds) * 1000;
+  function formatMs(ms) {
+    var sec = Math.max(0, Math.ceil(ms / 1000));
+    return pad(Math.floor(sec / 60)) + ":" + pad(sec % 60);
   }
 
-  function renderTime(ms) {
-    const totalSec = Math.max(0, Math.ceil(ms / 1000));
-    minutesEl.textContent = pad(Math.floor(totalSec / 60));
-    secondsEl.textContent = pad(totalSec % 60);
+  function showTime(ms) {
+    timeEl.textContent = formatMs(ms);
   }
 
-  function setProgress(pct) {
-    progressEl.style.setProperty("--pct", pct + "%");
+  function setBar(pct) {
+    barFill.style.width = pct + "%";
   }
 
-  function updateButtons() {
-    startBtn.disabled = running || (setMinutes === 0 && setSeconds === 0);
-    stopBtn.disabled = !running;
+  function syncUI() {
+    if (running) {
+      startBtn.hidden = true;
+      stopBtn.hidden = false;
+      timerEl.classList.add("timer--running");
+    } else {
+      startBtn.hidden = false;
+      stopBtn.hidden = true;
+      timerEl.classList.remove("timer--running");
+    }
   }
 
   function reset() {
     if (frameReq) window.cancelAnimationFrame(frameReq);
     running = false;
     finished = false;
+    remainingOnStop = null;
     timerEl.classList.remove("timer--running", "timer--finished");
-    renderTime(totalSetMs());
-    setProgress(0);
-    updateButtons();
+    showTime(setMinutes * 60 * 1000);
+    setBar(0);
+    syncUI();
   }
 
   function start() {
-    if (setMinutes === 0 && setSeconds === 0) return;
+    if (setMinutes <= 0 && !remainingOnStop) return;
     running = true;
     finished = false;
-    timerEl.classList.add("timer--running");
     timerEl.classList.remove("timer--finished");
-    updateButtons();
+    syncUI();
 
-    const duration = totalSetMs();
-    let startTime = null;
+    var duration = remainingOnStop || setMinutes * 60 * 1000;
+    remainingOnStop = null;
+    var startedAt = null;
 
     function tick(now) {
-      if (!startTime) startTime = now;
-      const elapsed = now - startTime;
-      const remaining = duration - elapsed;
+      if (!startedAt) startedAt = now;
+      var elapsed = now - startedAt;
+      var left = duration - elapsed;
 
-      if (remaining > 0) {
-        renderTime(remaining);
-        setProgress(((duration - remaining) / duration) * 100);
+      if (left > 0) {
+        showTime(left);
+        setBar(((duration - left) / (setMinutes * 60 * 1000)) * 100);
         frameReq = window.requestAnimationFrame(tick);
       } else {
-        renderTime(0);
-        setProgress(100);
+        showTime(0);
+        setBar(100);
         running = false;
         finished = true;
         timerEl.classList.remove("timer--running");
         timerEl.classList.add("timer--finished");
-        updateButtons();
+        syncUI();
       }
     }
 
@@ -84,47 +89,64 @@
   }
 
   function stop() {
+    if (!running) return;
     if (frameReq) window.cancelAnimationFrame(frameReq);
+
+    var displayed = timeEl.textContent.split(":");
+    var m = parseInt(displayed[0], 10);
+    var s = parseInt(displayed[1], 10);
+    remainingOnStop = (m * 60 + s) * 1000;
+
     running = false;
     timerEl.classList.remove("timer--running");
-    updateButtons();
+    syncUI();
   }
 
-  startBtn.addEventListener("click", start);
-  stopBtn.addEventListener("click", stop);
-  resetBtn.addEventListener("click", reset);
+  startBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    start();
+  });
 
-  document.querySelectorAll(".adj").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      if (running) return;
-      const target = btn.dataset.target;
-      const dir = btn.dataset.dir === "up" ? 1 : -1;
-      let totalSec = setMinutes * 60 + setSeconds;
+  stopBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    stop();
+  });
 
-      if (target === "minutes") {
-        totalSec += dir * 60;
-      } else {
-        totalSec += dir * 5;
-      }
+  resetBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    reset();
+  });
 
-      totalSec = Math.max(MIN_TOTAL, Math.min(MAX_TOTAL, totalSec));
-      setMinutes = Math.floor(totalSec / 60);
-      setSeconds = totalSec % 60;
-      finished = false;
-      timerEl.classList.remove("timer--finished");
-      renderTime(totalSetMs());
-      setProgress(0);
-      updateButtons();
-    });
+  minUpBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    if (running) return;
+    if (setMinutes < 99) setMinutes++;
+    remainingOnStop = null;
+    finished = false;
+    timerEl.classList.remove("timer--finished");
+    showTime(setMinutes * 60 * 1000);
+    setBar(0);
+  });
+
+  minDownBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    if (running) return;
+    if (setMinutes > 1) setMinutes--;
+    remainingOnStop = null;
+    finished = false;
+    timerEl.classList.remove("timer--finished");
+    showTime(setMinutes * 60 * 1000);
+    setBar(0);
   });
 
   reset();
 
+  // Auto-match OS light/dark theme
   function applyTheme(dark) {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   }
 
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  var mq = window.matchMedia("(prefers-color-scheme: dark)");
   applyTheme(mq.matches);
   mq.addEventListener("change", function (e) {
     applyTheme(e.matches);
