@@ -7,19 +7,25 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div id="countdown" class="countdown">
-    <div id="ticker" class="countdown__fill"></div>
-    <div class="countdown__controls">
-      <div id="display" class="countdown__digit">
-        <span id="minutes">05</span><span class="separator">:</span><span id="seconds">00</span>
+  <div class="timer">
+    <div id="progress" class="timer__progress"></div>
+    <div class="timer__content">
+      <div class="timer__time">
+        <button class="adj" data-target="minutes" data-dir="up" aria-label="Increase minutes">&#x25B2;</button>
+        <button class="adj" data-target="minutes" data-dir="down" aria-label="Decrease minutes">&#x25BC;</button>
+        <span id="minutes" class="digit">05</span>
+        <span class="sep">:</span>
+        <span id="seconds" class="digit">00</span>
+        <button class="adj" data-target="seconds" data-dir="up" aria-label="Increase seconds">&#x25B2;</button>
+        <button class="adj" data-target="seconds" data-dir="down" aria-label="Decrease seconds">&#x25BC;</button>
       </div>
-      <div id="setter" class="countdown__setter">
-        <button class="btn" data-action="down" aria-label="Decrease time">&#x25BC;</button>
-        <span class="setter__label">min</span>
-        <button class="btn" data-action="up" aria-label="Increase time">&#x25B2;</button>
+      <div class="timer__buttons">
+        <button id="startBtn" class="action action--start">Start</button>
+        <button id="stopBtn" class="action action--stop" disabled>Stop</button>
+        <button id="resetBtn" class="action action--reset">Reset</button>
       </div>
     </div>
   </div>

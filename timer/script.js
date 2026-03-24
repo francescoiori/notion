@@ -1,15 +1,17 @@
 (function () {
-  const countdownEl = document.getElementById("countdown");
-  const tickerEl = document.getElementById("ticker");
+  const timerEl = document.querySelector(".timer");
+  const progressEl = document.getElementById("progress");
   const minutesEl = document.getElementById("minutes");
   const secondsEl = document.getElementById("seconds");
+  const startBtn = document.getElementById("startBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  const resetBtn = document.getElementById("resetBtn");
 
-  const MIN_MINUTES = 1;
-  const MAX_MINUTES = 99;
-  const DEFAULT_MINUTES = 5;
+  const MIN_TOTAL = 5;
+  const MAX_TOTAL = 99 * 60 + 59;
 
-  let totalDuration = DEFAULT_MINUTES * 60 * 1000;
-  let setMinutes = DEFAULT_MINUTES;
+  let setMinutes = 5;
+  let setSeconds = 0;
   let running = false;
   let finished = false;
   let frameReq = null;
@@ -18,35 +20,44 @@
     return String(n).padStart(2, "0");
   }
 
-  function render(ms) {
-    const totalSec = Math.ceil(ms / 1000);
-    const m = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    minutesEl.textContent = pad(m);
-    secondsEl.textContent = pad(s);
+  function totalSetMs() {
+    return (setMinutes * 60 + setSeconds) * 1000;
   }
 
-  function setTicker(pct) {
-    tickerEl.style.height = pct + "%";
+  function renderTime(ms) {
+    const totalSec = Math.max(0, Math.ceil(ms / 1000));
+    minutesEl.textContent = pad(Math.floor(totalSec / 60));
+    secondsEl.textContent = pad(totalSec % 60);
+  }
+
+  function setProgress(pct) {
+    progressEl.style.setProperty("--pct", pct + "%");
+  }
+
+  function updateButtons() {
+    startBtn.disabled = running || (setMinutes === 0 && setSeconds === 0);
+    stopBtn.disabled = !running;
   }
 
   function reset() {
+    if (frameReq) window.cancelAnimationFrame(frameReq);
     running = false;
     finished = false;
-    if (frameReq) window.cancelAnimationFrame(frameReq);
-    countdownEl.classList.remove("countdown--running", "countdown--ended", "countdown--finished");
-    totalDuration = setMinutes * 60 * 1000;
-    render(totalDuration);
-    setTicker(100);
+    timerEl.classList.remove("timer--running", "timer--finished");
+    renderTime(totalSetMs());
+    setProgress(0);
+    updateButtons();
   }
 
   function start() {
+    if (setMinutes === 0 && setSeconds === 0) return;
     running = true;
     finished = false;
-    countdownEl.classList.add("countdown--running");
-    countdownEl.classList.remove("countdown--ended", "countdown--finished");
+    timerEl.classList.add("timer--running");
+    timerEl.classList.remove("timer--finished");
+    updateButtons();
 
-    const duration = totalDuration;
+    const duration = totalSetMs();
     let startTime = null;
 
     function tick(now) {
@@ -55,55 +66,60 @@
       const remaining = duration - elapsed;
 
       if (remaining > 0) {
-        render(remaining);
-        setTicker((remaining / duration) * 100);
+        renderTime(remaining);
+        setProgress(((duration - remaining) / duration) * 100);
         frameReq = window.requestAnimationFrame(tick);
       } else {
-        render(0);
-        setTicker(0);
+        renderTime(0);
+        setProgress(100);
         running = false;
         finished = true;
-        countdownEl.classList.remove("countdown--running");
-        countdownEl.classList.add("countdown--ended", "countdown--finished");
+        timerEl.classList.remove("timer--running");
+        timerEl.classList.add("timer--finished");
+        updateButtons();
       }
     }
 
     frameReq = window.requestAnimationFrame(tick);
   }
 
-  countdownEl.addEventListener("click", function (e) {
-    if (e.target.closest(".btn")) return;
+  function stop() {
+    if (frameReq) window.cancelAnimationFrame(frameReq);
+    running = false;
+    timerEl.classList.remove("timer--running");
+    updateButtons();
+  }
 
-    if (finished) {
-      reset();
-      return;
-    }
+  startBtn.addEventListener("click", start);
+  stopBtn.addEventListener("click", stop);
+  resetBtn.addEventListener("click", reset);
 
-    if (running) {
-      reset();
-    } else {
-      start();
-    }
-  });
-
-  document.querySelectorAll(".btn").forEach(function (btn) {
-    btn.addEventListener("click", function (e) {
-      e.stopPropagation();
+  document.querySelectorAll(".adj").forEach(function (btn) {
+    btn.addEventListener("click", function () {
       if (running) return;
+      const target = btn.dataset.target;
+      const dir = btn.dataset.dir === "up" ? 1 : -1;
+      let totalSec = setMinutes * 60 + setSeconds;
 
-      const action = btn.dataset.action;
-      if (action === "up" && setMinutes < MAX_MINUTES) {
-        setMinutes++;
-      } else if (action === "down" && setMinutes > MIN_MINUTES) {
-        setMinutes--;
+      if (target === "minutes") {
+        totalSec += dir * 60;
+      } else {
+        totalSec += dir * 5;
       }
-      reset();
+
+      totalSec = Math.max(MIN_TOTAL, Math.min(MAX_TOTAL, totalSec));
+      setMinutes = Math.floor(totalSec / 60);
+      setSeconds = totalSec % 60;
+      finished = false;
+      timerEl.classList.remove("timer--finished");
+      renderTime(totalSetMs());
+      setProgress(0);
+      updateButtons();
     });
   });
 
   reset();
 
-  // Theme: match OS preference
   function applyTheme(dark) {
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   }
