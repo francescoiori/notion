@@ -5,25 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Countdown Timer</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div class="timer">
-    <div class="timer__bar">
-      <div id="progress" class="timer__bar-fill"></div>
-    </div>
-    <div class="timer__body">
-      <div class="timer__display">
-        <button class="nudge" id="minUp" aria-label="Add 1 minute">+</button>
-        <span id="time" class="time">05:00</span>
-        <button class="nudge" id="minDown" aria-label="Remove 1 minute">&minus;</button>
+  <div class="timer" id="timer">
+    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="main">
+      <div class="left">
+        <button class="nudge" id="up">&#9650;</button>
+        <div class="clock" id="clock">05:00</div>
+        <button class="nudge" id="down">&#9660;</button>
       </div>
-      <div class="timer__actions">
-        <button id="startBtn" class="btn btn--start">Start</button>
-        <button id="stopBtn" class="btn btn--stop" hidden>Stop</button>
-        <button id="resetBtn" class="btn btn--reset">Reset</button>
+      <div class="right">
+        <button class="btn green" id="startBtn">Start</button>
+        <button class="btn red hidden" id="stopBtn">Stop</button>
+        <button class="btn grey" id="resetBtn">Reset</button>
       </div>
     </div>
   </div>

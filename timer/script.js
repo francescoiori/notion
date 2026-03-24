@@ -1,154 +1,124 @@
 (function () {
-  var timerEl = document.querySelector(".timer");
-  var barFill = document.getElementById("progress");
-  var timeEl = document.getElementById("time");
+  var timer = document.getElementById("timer");
+  var clockEl = document.getElementById("clock");
+  var fill = document.getElementById("progressFill");
   var startBtn = document.getElementById("startBtn");
   var stopBtn = document.getElementById("stopBtn");
   var resetBtn = document.getElementById("resetBtn");
-  var minUpBtn = document.getElementById("minUp");
-  var minDownBtn = document.getElementById("minDown");
+  var upBtn = document.getElementById("up");
+  var downBtn = document.getElementById("down");
 
-  var setMinutes = 5;
+  var minutes = 5;
   var running = false;
-  var finished = false;
-  var frameReq = null;
-  var remainingOnStop = null;
+  var done = false;
+  var raf = null;
+  var frozenMs = null;
 
   function pad(n) {
-    return n < 10 ? "0" + n : "" + n;
+    return n < 10 ? "0" + n : String(n);
   }
 
-  function formatMs(ms) {
-    var sec = Math.max(0, Math.ceil(ms / 1000));
-    return pad(Math.floor(sec / 60)) + ":" + pad(sec % 60);
+  function display(ms) {
+    var s = Math.max(0, Math.ceil(ms / 1000));
+    clockEl.textContent = pad(Math.floor(s / 60)) + ":" + pad(s % 60);
   }
 
-  function showTime(ms) {
-    timeEl.textContent = formatMs(ms);
+  function bar(pct) {
+    fill.style.width = Math.min(100, Math.max(0, pct)) + "%";
   }
 
-  function setBar(pct) {
-    barFill.style.width = pct + "%";
-  }
+  function show(el) { el.classList.remove("hidden"); }
+  function hide(el) { el.classList.add("hidden"); }
 
-  function syncUI() {
-    if (running) {
-      startBtn.hidden = true;
-      stopBtn.hidden = false;
-      timerEl.classList.add("timer--running");
-    } else {
-      startBtn.hidden = false;
-      stopBtn.hidden = true;
-      timerEl.classList.remove("timer--running");
-    }
-  }
-
-  function reset() {
-    if (frameReq) window.cancelAnimationFrame(frameReq);
+  function toIdle() {
     running = false;
-    finished = false;
-    remainingOnStop = null;
-    timerEl.classList.remove("timer--running", "timer--finished");
-    showTime(setMinutes * 60 * 1000);
-    setBar(0);
-    syncUI();
+    done = false;
+    frozenMs = null;
+    timer.className = "timer";
+    display(minutes * 60000);
+    bar(0);
+    show(startBtn);
+    hide(stopBtn);
   }
 
-  function start() {
-    if (setMinutes <= 0 && !remainingOnStop) return;
+  function startTimer() {
+    var total = minutes * 60000;
+    var duration = frozenMs != null ? frozenMs : total;
+    frozenMs = null;
     running = true;
-    finished = false;
-    timerEl.classList.remove("timer--finished");
-    syncUI();
+    done = false;
+    timer.className = "timer ticking";
+    hide(startBtn);
+    show(stopBtn);
 
-    var duration = remainingOnStop || setMinutes * 60 * 1000;
-    remainingOnStop = null;
-    var startedAt = null;
+    var t0 = null;
 
     function tick(now) {
-      if (!startedAt) startedAt = now;
-      var elapsed = now - startedAt;
-      var left = duration - elapsed;
-
+      if (!t0) t0 = now;
+      var left = duration - (now - t0);
       if (left > 0) {
-        showTime(left);
-        setBar(((duration - left) / (setMinutes * 60 * 1000)) * 100);
-        frameReq = window.requestAnimationFrame(tick);
+        display(left);
+        bar(((total - left) / total) * 100);
+        raf = requestAnimationFrame(tick);
       } else {
-        showTime(0);
-        setBar(100);
+        display(0);
+        bar(100);
         running = false;
-        finished = true;
-        timerEl.classList.remove("timer--running");
-        timerEl.classList.add("timer--finished");
-        syncUI();
+        done = true;
+        timer.className = "timer done";
+        show(startBtn);
+        hide(stopBtn);
       }
     }
 
-    frameReq = window.requestAnimationFrame(tick);
+    raf = requestAnimationFrame(tick);
   }
 
-  function stop() {
-    if (!running) return;
-    if (frameReq) window.cancelAnimationFrame(frameReq);
-
-    var displayed = timeEl.textContent.split(":");
-    var m = parseInt(displayed[0], 10);
-    var s = parseInt(displayed[1], 10);
-    remainingOnStop = (m * 60 + s) * 1000;
-
+  function stopTimer() {
+    if (raf) cancelAnimationFrame(raf);
     running = false;
-    timerEl.classList.remove("timer--running");
-    syncUI();
+    timer.className = "timer";
+
+    var parts = clockEl.textContent.split(":");
+    frozenMs = (parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10)) * 1000;
+
+    show(startBtn);
+    hide(stopBtn);
   }
 
-  startBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    start();
-  });
-
-  stopBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    stop();
-  });
-
-  resetBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    reset();
-  });
-
-  minUpBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    if (running) return;
-    if (setMinutes < 99) setMinutes++;
-    remainingOnStop = null;
-    finished = false;
-    timerEl.classList.remove("timer--finished");
-    showTime(setMinutes * 60 * 1000);
-    setBar(0);
-  });
-
-  minDownBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    if (running) return;
-    if (setMinutes > 1) setMinutes--;
-    remainingOnStop = null;
-    finished = false;
-    timerEl.classList.remove("timer--finished");
-    showTime(setMinutes * 60 * 1000);
-    setBar(0);
-  });
-
-  reset();
-
-  // Auto-match OS light/dark theme
-  function applyTheme(dark) {
-    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  function resetTimer() {
+    if (raf) cancelAnimationFrame(raf);
+    toIdle();
   }
+
+  startBtn.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); startTimer(); });
+  stopBtn.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); stopTimer(); });
+  resetBtn.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); resetTimer(); });
+
+  upBtn.addEventListener("click", function (e) {
+    e.preventDefault(); e.stopPropagation();
+    if (running) return;
+    if (minutes < 99) minutes++;
+    frozenMs = null; done = false;
+    timer.classList.remove("done");
+    display(minutes * 60000);
+    bar(0);
+  });
+
+  downBtn.addEventListener("click", function (e) {
+    e.preventDefault(); e.stopPropagation();
+    if (running) return;
+    if (minutes > 1) minutes--;
+    frozenMs = null; done = false;
+    timer.classList.remove("done");
+    display(minutes * 60000);
+    bar(0);
+  });
+
+  toIdle();
 
   var mq = window.matchMedia("(prefers-color-scheme: dark)");
-  applyTheme(mq.matches);
-  mq.addEventListener("change", function (e) {
-    applyTheme(e.matches);
-  });
+  function theme(dark) { document.documentElement.setAttribute("data-theme", dark ? "dark" : "light"); }
+  theme(mq.matches);
+  mq.addEventListener("change", function (e) { theme(e.matches); });
 })();
